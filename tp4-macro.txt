@@ -1,0 +1,43 @@
+Sub guardarRegistos()
+'
+' Guarda Observações, atualiza as formulas
+' Grava a data de alteração e coloca resultado
+' da tabela em modo cópia
+'
+' Atalho por teclado: Ctrl+Shift+G
+'
+' Por Leonardo Feijó em 27/05/2024
+'
+    Range("T_Clipboard").ClearContents
+
+    Range("T_TP4").Copy
+    
+    Range("T_Clipboard").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+    
+    Range("T_LastChange").ClearContents
+    
+    Range("T_Clipboard").Copy
+    Range("T_LastChange").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+    
+    Range("O1").Copy
+    Range("T_TP4[OBSERVAÇÕES]").PasteSpecial Paste:=xlPasteFormulas, Operation:=xlNone, _
+        SkipBlanks:=False, Transpose:=False
+        
+    Application.CutCopyMode = False
+    
+    ' Date
+    
+    Range("N1").Copy
+    Range("M1").PasteSpecial Paste:=xlPasteValues, Operation:=xlNone, SkipBlanks _
+        :=False, Transpose:=False
+    Application.CutCopyMode = False
+    
+    Range("A2").Select
+    Range("T_TP4[[#All],[ARTIGO]:[OBSERVAÇÕES]]").Copy
+
+
+End Sub
