@@ -1,0 +1,1041 @@
+$(document).ready(function () {
+	
+	$('#add_prds').keypress(validateNumber);
+	$('#add_volumes').keypress(validateNumber);
+	
+	$('#edit_prds').keypress(validateNumber);
+	$('#edit_volumes').keypress(validateNumber);
+	
+	var opcao_rececaomercadoria = getCookie("rececao_mercadoria");
+	
+	if(opcao_rececaomercadoria == 'null' || opcao_rececaomercadoria == ''){
+        opcao_rececaomercadoria = '0';
+    }
+	
+	switch(opcao_rececaomercadoria) {
+        case '1':
+            $("#rececao_tab").addClass("active");
+            $("#rececao").addClass("active");
+			
+			$('#datatable-rececao-mercadoria_filter').find('input.form-control').addClass('pesquisar_rececao');
+			$('.pesquisar_rececao').focus();
+	
+            break;
+        case '2':
+            $("#fornecedores_tab").addClass("active");
+            $("#fornecedores").addClass("active");
+			
+			$('#datatable-fornecedores-rececaomercadoria_filter').find('input.form-control').addClass('pesquisar_fornecedores');
+			$('.pesquisar_fornecedores').focus();
+			
+            break;
+        default:
+            $("#rececao_tab").addClass("active");
+            $("#rececao").addClass("active");
+            break;
+    } 
+	
+	$("#add_fornecedor").select2({
+		//placeholder: "Search Value...",
+		//allowClear: true,
+		//closeOnSelect: true
+	});/*.on('change.select2', function(e){
+		
+		var descricaoProblemas = $(this).val();
+		//$("#select2-chosen-10").html(descricaoProblemas);
+		//alert(descricaoProblemas);
+		
+		if(descricaoProblemas == 'outros'){
+			$('#descProblema').css('display','block');
+			$('#descProblema').focus();
+		} else if(descricaoProblemas == 'outrosPar' || descricaoProblemas == 'outrosIndus'){
+			$('#descProblema').css('display','block');
+			$('#descProblema').focus();
+		} else {
+			$('#descProblema').css('display','none');
+			$('#descProblema').val('');
+		}
+		
+	});*/
+	
+	// DropZone
+	Dropzone.options.dropzoneT = {
+		paramName: "file", // The name that will be used to transfer the file
+		maxFilesize: 20, // MB
+		maxFiles: 4,
+		acceptedFiles: ".jpg,.jpeg,.png,.gif,.docx,.doc,.xls,.xlsx,.csv,.pdf",
+		addRemoveLinks: true,
+		//uploadMultiple: true,
+		//autoProcessQueue: false,
+		/*init: function() {
+			var submitButton = document.querySelector("#videoDropzoneSubmit")
+			myDropzone = this; // closure
+			
+			submitButton.addEventListener("click", function() {
+				myDropzone.processQueue(); // Tell Dropzone to process all queued files.
+			});     
+		}*/
+		init: function () {
+			this.on("complete", function (file, responseText) {
+				
+				/** console.log(file); **/
+				
+			});
+			this.on("success", function(file, responseText) {
+				//console.log(responseText);
+				
+				this.removeAllFiles(true); 
+				
+				var rececao = responseText.trim().split('(');
+				rececao = rececao[1].split(')');
+				rececao = rececao[0];
+				//alert(rececao);
+				
+				var apagarB = "<div style='margin-bottom:10px;'><i style='color:#bd2d29;cursor:pointer;font-size:18px;' id='apagarAnexo" + rececao + "' data-nome_ficheiro='" + responseText.trim() + "' class='fa fa-trash' onclick=" + '"apagar_anexos(' + "'" + rececao.trim() + "','" + responseText.trim() + "'" + ');"' + "></i>";
+			
+				var nomeFicheiro = file.name;
+				nomeFicheiro = nomeFicheiro.split('.');
+				
+				if(nomeFicheiro[1].toUpperCase() == 'JPG' || nomeFicheiro[1].toUpperCase() == 'JPEG' || nomeFicheiro[1].toUpperCase() == 'GIF' || nomeFicheiro[1].toUpperCase() == 'PNG'){
+					$('#separadorFicheiros').append(apagarB + ' <i style="color:#ed9c28;" class="fa fa-file-image-o"></i> <a href="assets/docs/rececao_mercadorias/'+responseText.trim()+'" target="_blank">'+responseText.trim()+'</a></div>');
+				} else if(nomeFicheiro[1].toUpperCase() == 'PDF'){
+					$('#separadorFicheiros').append(apagarB + ' <i style="color:#ff0000;" class="fa fa-file-pdf-o"></i> <a href="assets/docs/rececao_mercadorias/'+responseText.trim()+'" target="_blank">'+responseText.trim()+'</a></div>');
+				} else if(nomeFicheiro[1].toUpperCase() == 'DOC' || nomeFicheiro[1].toUpperCase() == 'DOCX'){
+					$('#separadorFicheiros').append(apagarB + ' <i style="color:#0078d7;" class="fa fa-file-word-o"></i> <a href="assets/docs/rececao_mercadorias/'+responseText.trim()+'" target="_blank">'+responseText.trim()+'</a></div>');
+				} else if(nomeFicheiro[1].toUpperCase() == 'TXT'){
+					$('#separadorFicheiros').append(apagarB + ' <i style="color:#7820B6;" class="fa fa-file-text-o"></i> <a href="assets/docs/rececao_mercadorias/'+responseText.trim()+'" target="_blank">'+responseText.trim()+'</a></div>');
+				} else if(nomeFicheiro[1].toUpperCase() == 'XLS' || nomeFicheiro[1].toUpperCase() == 'XLSX' || nomeFicheiro[1].toUpperCase() == 'CSV'){
+					$('#separadorFicheiros').append(apagarB + ' <i style="color:#008000;" class="fa fa-file-excel-o"></i> <a href="assets/docs/rececao_mercadorias/'+responseText.trim()+'" target="_blank">'+responseText.trim()+'</a></div>');
+				} else {
+					$('#separadorFicheiros').append(apagarB + ' <i style="color:#000000;" class="fa fa-file-o"></i> <a href="assets/docs/rececao_mercadorias/'+responseText.trim()+'" target="_blank">'+responseText.trim()+'</a></div>');
+				}
+				
+				new PNotify({
+					title: 'Ficheiro Sucesso',
+					text: 'O ficheiro foi carregado com sucesso.',
+					type: 'success'
+				});
+									
+			});
+			this.on("error", function (file, responseText) {
+				
+				//this.removeAllFiles(true);
+
+				new PNotify({
+					title: 'Ficheiro Inválido',
+					text: 'O ficheiro que pretende submeter é inválido.',
+					type: 'error'
+				});
+				
+			});
+		}
+		
+	};
+	
+	$("div#dropmehere").dropzone({
+		url: "/upload/ajax/upload",
+		parallelUploads: 1,
+		paramName: 'file',
+		previewsContainer: null,
+		clickable: true,
+		enqueueForUpload: false,
+		accept: function(file, done)
+		{
+			console.log(file);
+			done();
+		},
+	});
+	
+	$("#edit_fornecedor").select2({
+		//placeholder: "Search Value...",
+		//allowClear: true,
+		//closeOnSelect: true
+	});
+	
+	$("#filtro_tipo_data").select2({
+		//placeholder: "Search Value...",
+		//allowClear: true,
+		//closeOnSelect: true
+	});
+	
+	// ATIVAR-INATIVAR O EXPEDICAO
+    $("input[name='ativo_rececao[]']").change(function() {
+        if ($(this).prop('checked')) {
+            var id = $(this).data('id');
+            var ativo = 1;
+            //checked
+        } else {
+            var id = $(this).data('id');
+            var ativo = 0;
+            //not checked
+        }
+
+        var dataString = 'id=' + id + '&ativo=' + ativo + '&opcao=ativar';
+
+        $.ajax({
+            type: "POST",
+            url: "assets/php/logistica_rececao_mercadorias.php",
+            data: dataString,
+            cache: false,
+            success: function(result)
+            {
+                //alert(result);
+                new PNotify({
+                    title: 'Sucesso',
+                    text: result,
+                    type: 'success'
+                });
+            }
+        });
+        return false;
+    });
+	
+	// ATIVAR-INATIVAR O EXPEDICAO
+    $("input[name='urgente_rececao[]']").change(function() {
+        if ($(this).prop('checked')) {
+            var id = $(this).data('id');
+            var urgente = 1;
+			
+			$('.urgente_rececao'+id).removeClass('checkbox-default');
+			$('.urgente_rececao'+id).addClass('checkbox-success');
+            //checked
+        } else {
+            var id = $(this).data('id');
+            var urgente = 0;
+			
+			$('.urgente_rececao'+id).removeClass('checkbox-success');
+			$('.urgente_rececao'+id).addClass('checkbox-default');
+            //not checked
+        }
+
+        var dataString = 'id=' + id + '&urgente=' + urgente + '&opcao=ativar_urgente';
+
+        $.ajax({
+            type: "POST",
+            url: "assets/php/logistica_rececao_mercadorias.php",
+            data: dataString,
+            cache: false,
+            success: function(result)
+            {
+                //alert(result);
+                new PNotify({
+                    title: 'Sucesso',
+                    text: result,
+                    type: 'success'
+                });
+            }
+        });
+        return false;
+    });
+	
+	// EDITA OS VALORES DO BPM
+    $("#edit_rececao_save").click(function () {
+        document.getElementById("edit_rececao").style.border = "1px solid #cccccc"; 
+		document.getElementById("s2id_edit_fornecedor").style.border = "1px solid #cccccc"; 
+		document.getElementById("edit_num_guia").style.border = "1px solid #cccccc"; 
+
+        var infor = $('#get_id_rececao').html(); // VAI BUSCAR A INFORMAÇÃO DO BPM
+		var infor_array = infor.split(";");
+		
+		var data_rececao = document.getElementById("edit_rececao").value.trim();
+		var fornecedor = $('#edit_fornecedor').val();
+		var referencia = document.getElementById("edit_referencia").value.trim();
+		var num_guia = document.getElementById("edit_num_guia").value.trim();
+		var prds = document.getElementById("edit_prds").value.trim();
+		var volumes = document.getElementById("edit_volumes").value.trim();
+		
+		if ($('#edit_urgente_rececao').prop('checked')) {
+            var urgente = 1;
+            //checked
+        } else {
+            var urgente = 0;
+            //not checked
+        }
+
+		
+        var dataString = 'id=' + infor_array[0] + '&data_rececao=' + data_rececao + '&fornecedor=' + fornecedor +  '&referencia=' + referencia + '&num_guia=' + num_guia + '&prds=' + prds + '&volumes=' + volumes + '&urgente=' + urgente + '&opcao=editar';
+
+        //alert(dataString);
+        if(data_rececao == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Data Receção.',
+                shadow: true
+            });
+            document.getElementById("edit_rececao").style.border = "1px solid red"; 
+        } else if(fornecedor < 1){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor selecione um Fornecedor.',
+                shadow: true
+            });
+            document.getElementById("s2id_edit_fornecedor").style.border = "1px solid red"; 
+        } else  if(num_guia == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Nº Guia.',
+                shadow: true
+            });
+            document.getElementById("edit_num_guia").style.border = "1px solid red"; 
+			document.getElementById("edit_num_guia").focus();
+        } else  {
+
+			//alert(dataString);
+            $.ajax({
+                type: "POST",
+                url: "assets/php/logistica_rececao_mercadorias.php",
+                data: dataString,
+                cache: false,
+                success: function(result)
+                {
+                    window.location.reload();
+                    $.magnificPopup.close(); // FECHA O POPUP
+                    document.getElementById("edit_modalLG").style.display = "none"; 
+
+                    //alert(result);
+                    new PNotify({
+                        title: 'Sucesso',
+                        text: result,
+                        type: 'success'
+                    });
+
+                }
+            });
+
+        }
+    });
+	
+	// ABRE UM POPUP COM FORMULARIO PARA ADICIONAR UM NOVO BPM
+    $('.add_rececao').click(function () {
+
+       document.getElementById("add_modalLG").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+       
+       document.getElementById("add_rececao").style.border = "1px solid #cccccc"; 
+	   document.getElementById("s2id_add_fornecedor").style.border = "1px solid #cccccc"; 
+	   document.getElementById("add_num_guia").style.border = "1px solid #cccccc"; 
+	   
+		document.getElementById("add_rececao").value = '';
+		$("#add_fornecedor").select2().val('').trigger("change");
+		document.getElementById("add_referencia").value = '';
+		document.getElementById("add_num_guia").value = '';
+		document.getElementById("add_prds").value = '';
+		document.getElementById("add_volumes").value = '';
+		$('#add_urgente_rececao').prop('checked', false)
+
+    }); 
+	
+	// GRAVA O FORMULARIO PARA ADICIONAR O NOVO CONTRATO
+    $('#add_rececao_save').click(function () {
+        document.getElementById("add_rececao").style.border = "1px solid #cccccc"; 
+		document.getElementById("s2id_add_fornecedor").style.border = "1px solid #cccccc"; 
+		document.getElementById("add_num_guia").style.border = "1px solid #cccccc"; 
+
+        var data_rececao = document.getElementById("add_rececao").value.trim();
+		var fornecedor = $('#add_fornecedor').val();
+		var referencia = document.getElementById("add_referencia").value.trim();
+		var num_guia = document.getElementById("add_num_guia").value.trim();
+		var prds = document.getElementById("add_prds").value.trim();
+		var volumes = document.getElementById("add_volumes").value.trim();
+		
+		if ($('#add_urgente_rececao').prop('checked')) {
+            var urgente = 1;
+            //checked
+        } else {
+            var urgente = 0;
+            //not checked
+        }
+
+        var dataString = 'data_rececao=' + data_rececao + '&fornecedor=' + fornecedor +  '&referencia=' + referencia + '&num_guia=' + num_guia + '&prds=' + prds + '&volumes=' + volumes + '&urgente=' + urgente + '&opcao=adicionar';
+
+        if(data_rececao == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Data Receção.',
+                shadow: true
+            });
+            document.getElementById("add_rececao").style.border = "1px solid red"; 
+        } else if(fornecedor == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor selecione o Fornecedor.',
+                shadow: true
+            });
+            document.getElementById("s2id_add_fornecedor").style.border = "1px solid red"; 
+        } else if(num_guia == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Nº Guia.',
+                shadow: true
+            });
+            document.getElementById("add_num_guia").style.border = "1px solid red"; 
+        } else {
+			
+			//alert(dataString);
+            $.ajax({
+                type: "POST",
+                url: "assets/php/logistica_rececao_mercadorias.php",
+                data: dataString,
+                cache: false,
+                success: function(result)
+                {
+                    //alert(result);
+
+                    window.location.reload();
+                    $.magnificPopup.close(); // FECHA O POPUP
+                    document.getElementById("add_modalLG").style.display = "none"; 
+
+                    //alert(result);
+                    new PNotify({
+                        title: 'Sucesso',
+                        text: 'Adicionado com Sucesso',
+                        type: 'success'
+                    });
+                }
+            });
+        }
+
+    }); 
+	
+	// REMOVE O REGISTO DA LINHA SELECIONADA
+    $('#remover_rececao').click(function () {
+
+        var id = $('#get_rececao').html();
+		
+        $.ajax({
+            type: "POST",
+            url: "assets/php/logistica_rececao_mercadorias.php",
+            data: 'id='+id+'&opcao=apagar',
+            cache: false,
+            success: function(result)
+            {
+                //alert(result);
+                //window.location.reload();
+                $.magnificPopup.close(); // FECHA O POPUP
+                document.getElementById("modalXS").style.display = "none"; 
+                document.getElementById('tr_'+id).style.display = "none";
+
+                //alert(result);
+                new PNotify({
+                    title: 'Sucesso',
+                    text: 'Removido com Sucesso',
+                    type: 'success'
+                });
+            }
+        });
+
+    });
+	
+	/** FILTRO PARA MOSTRAR OS REGISTOS ANTERIORES **/
+	// ABRE UM POPUP COM FORMULARIO PARA FILTRAR OS DADOS
+    $('.filtro_rececao').click(function () {
+
+       document.getElementById("filtro_modalSM").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+       
+	   document.getElementById("s2id_filtro_tipo_data").style.border = "1px solid #cccccc"; 
+       document.getElementById("filtro_data_inicio").style.border = "1px solid #cccccc"; 
+	   document.getElementById("filtro_data_fim").style.border = "1px solid #cccccc"; 
+	   
+	   $("#filtro_tipo_data").select2().val('').trigger("change"); //.val(fornecedor);
+		document.getElementById("filtro_data_inicio").value = '';
+		document.getElementById("filtro_data_fim").value  = '';
+
+    }); 
+	
+    $('#filtrar_rececao').click(function () {
+
+		var tipo_data = $('#filtro_tipo_data').val();
+		var data_inicio = document.getElementById("filtro_data_inicio").value.trim();
+		var data_fim = document.getElementById("filtro_data_fim").value.trim();
+		
+		document.getElementById("s2id_filtro_tipo_data").style.border = "1px solid #cccccc"; 
+		document.getElementById("filtro_data_inicio").style.border = "1px solid #cccccc"; 
+		document.getElementById("filtro_data_fim").style.border = "1px solid #cccccc"; 
+		
+		var dataString = 'tipo_data=' + tipo_data + '&data_inicio=' + data_inicio + '&data_fim=' + data_fim + '&opcao=filtro_dados';
+		
+		if(tipo_data == ''){
+			new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor selecione o Tipo Data.',
+                shadow: true
+            });
+            document.getElementById("s2id_filtro_tipo_data").style.border = "1px solid red"; 
+		} else if(data_inicio == ''){
+			new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Data Início.',
+                shadow: true
+            });
+            document.getElementById("filtro_data_inicio").style.border = "1px solid red"; 
+			document.getElementById("filtro_data_inicio").focus();
+		} else if(data_fim == ''){
+			new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Data Fim.',
+                shadow: true
+            });
+            document.getElementById("filtro_data_fim").style.border = "1px solid red"; 
+			document.getElementById("filtro_data_fim").focus();
+		} else {
+			
+			var _data_inicio = data_inicio.split('/');
+			var _data_fim = data_fim.split('/');
+			
+			data_inicio = new Date(_data_inicio[2]+'-'+_data_inicio[1]+'-'+_data_inicio[0]);
+			data_fim = new Date(_data_fim[2]+'-'+_data_fim[1]+'-'+_data_fim[0]);
+			
+			if(data_fim < data_inicio){
+				new PNotify({
+					title: 'Dados Inválidos',
+					text: 'Data Fim é menor que a Data Início.',
+					shadow: true
+				});
+				document.getElementById("filtro_data_fim").style.border = "1px solid red"; 
+				document.getElementById("filtro_data_fim").focus();
+			} else {
+
+				//alert(dataString);
+				$.ajax({
+					type: "POST",
+					url: "assets/php/logistica_rececao_mercadorias.php",
+					data: dataString,
+					cache: false,
+					success: function(result)
+					{
+						//alert(result.trim());
+						window.location.href = "rececao-mercadorias?rececao="+result.trim();
+
+					}
+				});
+				
+			}
+			
+		}
+
+    });
+	
+	
+	/*** RECEÇÃO MERCADORIAS - FORNECEDORES ***/
+	
+	// ABRE UM POPUP COM FORMULARIO PARA ADICIONAR UM NOVO BPM
+    $('.add_fornecedor').click(function () {
+
+       document.getElementById("add_fornecedor_modalLG").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+       
+       document.getElementById("add_nome_sacha").style.border = "1px solid #cccccc"; 
+	   document.getElementById("add_nome_fornecedor").style.border = "1px solid #cccccc"; 
+	   
+		document.getElementById("add_nome_sacha").value = '';
+		document.getElementById("add_nome_fornecedor").value = '';
+
+    }); 
+	
+	// GRAVA O FORMULARIO PARA ADICIONAR O NOVO CONTRATO
+    $('#add_fornecedor_save').click(function () {
+        document.getElementById("add_nome_sacha").style.border = "1px solid #cccccc"; 
+        document.getElementById("add_nome_fornecedor").style.border = "1px solid #cccccc";
+
+        var nome_sacha = document.getElementById("add_nome_sacha").value.trim();
+        var nome_fornecedor = document.getElementById("add_nome_fornecedor").value.trim();
+
+        var dataString = 'nome_sacha=' + nome_sacha + '&fornecedor_nome=' + nome_fornecedor + '&opcao=adicionar_fornecedor';
+
+		//alert(dataString);
+        if(nome_sacha == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Nome Sacha.',
+                shadow: true
+            });
+            document.getElementById("add_nome_sacha").style.border = "1px solid red"; 
+			document.getElementById("add_nome_sacha").focus();
+        } else if(nome_fornecedor == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Nome Fornecedor.',
+                shadow: true
+            });
+            document.getElementById("add_nome_fornecedor").style.border = "1px solid red"; 
+			document.getElementById("add_nome_fornecedor").focus();
+        } else {
+            $.ajax({
+                type: "POST",
+                url: "assets/php/logistica_rececao_mercadorias.php",
+                data: dataString,
+                cache: false,
+                success: function(result)
+                {
+                    //alert(result);
+
+                    window.location.reload();
+                    $.magnificPopup.close(); // FECHA O POPUP
+                    document.getElementById("add_fornecedor_modalLG").style.display = "none"; 
+
+                    //alert(result);
+                    new PNotify({
+                        title: 'Sucesso',
+                        text: 'Adicionado com Sucesso',
+                        type: 'success'
+                    });
+                }
+            });
+        }
+
+    }); 
+	
+	// EDITA OS VALORES DO BPM
+    $("#edita_fornecedor").click(function () {
+        document.getElementById("edit_nome_sacha").style.border = "1px solid #cccccc"; 
+		document.getElementById("edit_nome_fornecedor").style.border = "1px solid #cccccc"; 
+
+        var infor = $('#get_id_fornecedor').html(); // VAI BUSCAR A INFORMAÇÃO DO BPM
+		var infor_array = infor.split(";");
+		
+		var nome_sacha = document.getElementById("edit_nome_sacha").value.trim();
+		var nome_fornecedor = document.getElementById("edit_nome_fornecedor").value.trim();
+
+        var dataString = 'id=' + infor_array[0] + '&nome_sacha=' + nome_sacha + '&nome_fornecedor=' + nome_fornecedor + '&opcao=editar_fornecedor';
+
+        //alert(dataString);
+        if(nome_sacha == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Nome Sacha.',
+                shadow: true
+            });
+            document.getElementById("edit_nome_sacha").style.border = "1px solid red"; 
+			document.getElementById("edit_nome_sacha").focus();
+        } else if(nome_fornecedor == ''){
+            new PNotify({
+                title: 'Campos vazios',
+                text: 'Por favor preencha o campo Nome Fornecedor.',
+                shadow: true
+            });
+            document.getElementById("edit_nome_fornecedor").style.border = "1px solid red"; 
+			document.getElementById("edit_nome_fornecedor").focus();
+        } else {
+
+            $.ajax({
+                type: "POST",
+                url: "assets/php/logistica_rececao_mercadorias.php",
+                data: dataString,
+                cache: false,
+                success: function(result)
+                {
+                    window.location.reload();
+                    $.magnificPopup.close(); // FECHA O POPUP
+                    document.getElementById("edit_fornecedor_modalLG").style.display = "none"; 
+
+                    //alert(result);
+                    new PNotify({
+                        title: 'Sucesso',
+                        text: result,
+                        type: 'success'
+                    });
+
+                }
+            });
+
+        }
+    });
+		
+	// REMOVE O REGISTO DA LINHA SELECIONADA
+    $('#remover_fornecedor').click(function () {
+
+        var id = $('#get_fornecedor').html();
+
+        $.ajax({
+            type: "POST",
+            url: "assets/php/logistica_rececao_mercadorias.php",
+            data: 'id='+id+'&opcao=apagar_fornecedor',
+            cache: false,
+            success: function(result)
+            {
+                //alert(result);
+                //window.location.reload();
+                $.magnificPopup.close(); // FECHA O POPUP
+                document.getElementById("fornecedor_modalXS").style.display = "none"; 
+                document.getElementById('tr_fornecedores_'+id).style.display = "none";
+
+                //alert(result);
+                new PNotify({
+                    title: 'Sucesso',
+                    text: 'Removido com Sucesso',
+                    type: 'success'
+                });
+            }
+        });
+
+    });
+	
+	$(".exportExcel").click(function() {
+			
+		$.magnificPopup.open({
+		  items: {
+			src: '#exportarExcel_modalLG'
+		  },
+		  type: 'inline',
+		  closeOnContentClick: false,
+		  closeOnBgClick: false,
+		  showCloseBtn: false
+		});
+		
+		$('input[name="radioRececao"]').prop('checked', false);
+		$('#data_inicioExportar').val('');
+		$('#data_fimExportar').val('');
+		
+		document.getElementById("exportarExcel_modalLG").style.display = "block"; // MOSTRA O FORMULÃ€RIO VISIVEL
+		
+	});
+	
+	$("#exportarExcel").click(function() {
+			
+		var tipo = $('input[name="radioRececao"]:checked').length;
+		var data_inicio = $('#data_inicioExportar').val();
+		var data_fim = $('#data_fimExportar').val();
+		
+		if(parseInt(tipo) < 1){
+			new PNotify({
+				title: 'Campos Vazios',
+				text: 'Seleccione o Tipo Receções',
+				type: 'warning'
+			});
+		} else if(data_inicio == ''){
+			new PNotify({
+				title: 'Campos Vazios',
+				text: 'Coloque uma Data Início',
+				type: 'warning'
+			});
+		} else if(data_fim == ''){
+			new PNotify({
+				title: 'Campos Vazios',
+				text: 'Coloque uma Data Fim',
+				type: 'warning'
+			});
+		} else {
+			
+			var _data_inicio = data_inicio.split("/");
+			var _data_fim = data_fim.split("/");
+			
+			data_inicio = new Date(_data_inicio[2]+'-'+_data_inicio[1]+'-'+_data_inicio[0]);
+			data_fim = new Date(_data_fim[2]+'-'+_data_fim[1]+'-'+_data_fim[0]);
+			
+			if(data_fim < data_inicio){
+				new PNotify({
+					title: 'Valores Inválidos',
+					text: 'A Data Fim é menor que a Data Início.',
+					type: 'error'
+				});
+			} else {
+				document.getElementById("exportExcelForm").submit();
+			}
+			
+		}
+		
+	});
+
+	$('.openFolder').click(function(){
+		
+		var rececao = $(this).attr('data-namefolder');
+		$('.openFolderTitle').html(rececao);
+		
+		$.ajax({
+			type: "POST",
+			url: "assets/php/logistica_rececao_mercadorias.php",
+			data: 'rececao='+encodeURIComponent(rececao)+'&opcao=mostrarPastas',
+			cache: false,
+			success: function(result)
+			{
+				result = JSON.parse(result);
+				//console.log(result);
+				
+				var a = '';
+				var html = '<ul class="nav nav-tabs" id="tabsOpenFolder">';
+				var html2 = '';
+				
+				for(var i=0; i < result.length; i++){
+					if(i < 1){ a = 'active'; } else { a = ''; };
+					
+					html += '<li class="'+a+'">'
+								+ '<a href="#div'+result[i].trim().replace(/ /g, "_")+'" data-folder="'+result[i].trim()+'" data-toggle="tab">'+result[i].trim()+'</a>'
+							+ '</li>';
+							
+					html2 += '<div id="div'+result[i].trim().replace(/ /g, "_")+'" class="tab-pane '+a+'">'+result[i].trim()+'</div>';
+				}
+				html += '</ul>';
+				
+				$('#tabsOpenFolder').html(html);
+				$('#contentOpenFolder').html(html2);
+				
+				for(var b=0; b < result.length; b++){
+					
+					$.ajax({
+						type: "POST",
+						url: "assets/php/logistica_rececao_mercadorias.php",
+						data: 'rececao='+encodeURIComponent(rececao)+'&subpasta='+result[b].trim()+'&opcao=mostrarFicheiros',
+						cache: false,
+						async:false,
+						success: function(result2)
+						{
+							//console.log(result[b].trim()+' - '+result2.trim());
+							$('#div'+result[b].trim().replace(/ /g, "_")).html(result2.trim());
+							
+						}
+					});	
+					
+				}
+				
+			}
+		});	
+		
+		$.magnificPopup.open({
+			items: {
+				src: '#openFolder_modalLG'
+			},
+			type: 'inline',
+			showCloseBtn: false,
+			closeOnContentClick: false,
+			closeOnBgClick: false,
+			closeBtnInside: false
+		});
+		
+		document.getElementById("openFolder_modalLG").style.display = "block"; // MOSTRA O FORMULÃ€RIO VISIVEL
+		
+	});
+
+	$('.fecharOpenFolders').click(function () {
+		document.getElementById("openFolder_modalLG").style.display = "none"; // MOSTRA O FORMULÃ€RIO VISIVEL
+		$.magnificPopup.close();
+	});
+	
+});
+
+function editar_rececao(rececao, data_rececao, fornecedor, referencia, num_guia, prds, volumes, urgente, nome_fornecedor, anexos){
+	
+	document.getElementById("rececao_ficheiros").value = rececao;
+	
+	document.getElementById("edit_rececao").style.border = "1px solid #cccccc"; 
+	document.getElementById("s2id_edit_fornecedor").style.border = "1px solid #cccccc"; 
+	document.getElementById("edit_num_guia").style.border = "1px solid #cccccc"; 
+	
+	document.getElementById("edit_rececao").value = '';
+	$("#edit_fornecedor").select2().val('').trigger("change");
+	document.getElementById("edit_referencia").value = '';
+	document.getElementById("edit_num_guia").value = '';
+	document.getElementById("edit_prds").value = '';
+	document.getElementById("edit_volumes").value = '';
+	$('#edit_urgente_rececao').prop('checked', false);
+	
+	$('#separadorFicheiros').html('');
+
+	$('#titulo_rececao').html('<i class="fa fa-pencil" aria-hidden="true"></i> Receção em '+data_rececao+' - '+nome_fornecedor);
+	$('#get_id_rececao').html(rececao+";"+data_rececao+";"+fornecedor+";"+referencia+";"+num_guia+";"+prds+";"+volumes); //coloca o id no html com o id #registo_id
+
+	// COLOCA OS VALORES DO RESPETIVO EXPEDIÇÃO NOS CAMPOS
+	if(urgente > 0){
+		var checkurgente = true;
+	} else {
+		var checkurgente = false;
+	}
+	
+	document.getElementById("edit_rececao").value = data_rececao;
+	$("#edit_fornecedor").select2().val(fornecedor).trigger("change"); //.val(fornecedor);
+	document.getElementById("edit_referencia").value = referencia;
+	document.getElementById("edit_num_guia").value = num_guia;
+	document.getElementById("edit_prds").value = prds;
+	document.getElementById("edit_volumes").value = volumes;
+	$('#edit_urgente_rececao').prop('checked', checkurgente);
+	
+	var anexosArray = anexos.split(' | ');
+	for(a=0; a < ((anexosArray.length) - 1); a++ ){
+		
+		var apagarB = "<div style='margin-bottom:10px;'><i style='color:#bd2d29;cursor:pointer;font-size:18px;' id='apagarAnexo" + rececao.trim() + "' data-nome_ficheiro='" + anexosArray[a].trim() + "' class='fa fa-trash' onclick=" + '"apagar_anexos(' + "'" + rececao.trim() + "','" + anexosArray[a].trim() + "'" + ');"' + "></i>";
+	
+		var nomeFicheiro = anexosArray[a];
+		nomeFicheiro = nomeFicheiro.split('.');
+		
+		if(nomeFicheiro[1].toUpperCase() == 'JPG' || nomeFicheiro[1].toUpperCase() == 'JPEG' || nomeFicheiro[1].toUpperCase() == 'GIF' || nomeFicheiro[1].toUpperCase() == 'PNG'){
+			$('#separadorFicheiros').append(apagarB + ' <i style="color:#ed9c28;" class="fa fa-file-image-o"></i> <a href="assets/docs/rececao_mercadorias/'+anexosArray[a].trim()+'" target="_blank">'+anexosArray[a].trim()+'</a></div>');
+		} else if(nomeFicheiro[1].toUpperCase() == 'PDF'){
+			$('#separadorFicheiros').append(apagarB + ' <i style="color:#ff0000;" class="fa fa-file-pdf-o"></i> <a href="assets/docs/rececao_mercadorias/'+anexosArray[a].trim()+'" target="_blank">'+anexosArray[a].trim()+'</a></div>');
+		} else if(nomeFicheiro[1].toUpperCase() == 'DOC' || nomeFicheiro[1].toUpperCase() == 'DOCX'){
+			$('#separadorFicheiros').append(apagarB + ' <i style="color:#0078d7;" class="fa fa-file-word-o"></i> <a href="assets/docs/rececao_mercadorias/'+anexosArray[a].trim()+'" target="_blank">'+anexosArray[a].trim()+'</a></div>');
+		} else if(nomeFicheiro[1].toUpperCase() == 'TXT'){
+			$('#separadorFicheiros').append(apagarB + ' <i style="color:#7820B6;" class="fa fa-file-text-o"></i> <a href="assets/docs/rececao_mercadorias/'+anexosArray[a].trim()+'" target="_blank">'+anexosArray[a].trim()+'</a></div>');
+		} else if(nomeFicheiro[1].toUpperCase() == 'XLS' || nomeFicheiro[1].toUpperCase() == 'XLSX' || nomeFicheiro[1].toUpperCase() == 'CSV'){
+			$('#separadorFicheiros').append(apagarB + ' <i style="color:#008000;" class="fa fa-file-excel-o"></i> <a href="assets/docs/rececao_mercadorias/'+anexosArray[a].trim()+'" target="_blank">'+anexosArray[a].trim()+'</a></div>');
+		} else {
+			$('#separadorFicheiros').append(apagarB + ' <i style="color:#000000;" class="fa fa-file-o"></i> <a href="assets/docs/rececao_mercadorias/'+anexosArray[a].trim()+'" target="_blank">'+anexosArray[a].trim()+'</a></div>');
+		}
+		
+	}
+
+	// COLOCA OS VALORES DO PLACEHOLDER DO BPM
+	//document.getElementById("edit_data").placeholder = exp_data_plac;
+	//document.getElementById("edit_hora").placeholder = exp_hora_plac;
+
+	document.getElementById("edit_modalLG").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+
+	document.getElementById("edit_rececao").style.border = "1px solid #cccccc"; 
+	document.getElementById("s2id_edit_fornecedor").style.border = "1px solid #cccccc"; 
+	document.getElementById("edit_num_guia").style.border = "1px solid #cccccc"; 
+	
+}
+
+function remover_rececao(rececao, num_guia, nome_fornecedor){
+	
+	var bpm = $(this).data('bpm');
+	
+	$('#get_rececao').html(rececao);
+
+	$('#texto_info_rececao').html("Pretende remover o <strong>Fornecedor "+nome_fornecedor+" (Nº GUIA: "+num_guia+")</strong>?");
+
+	document.getElementById("modalXS").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+	
+}
+
+function anexos_rececao(rececao, visualizacao){
+	
+	$('#anexosDiv').html('');
+	
+	document.getElementById("ver_anexos_modalLG").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+	
+	var dataString = 'rececao=' + rececao + '&editar=' + visualizacao + '&opcao=ver_anexos';
+	
+	$.ajax({
+		type: "POST",
+		url: "assets/php/logistica_rececao_mercadorias.php",
+		data: dataString,
+		cache: false,
+		success: function(result)
+		{
+			//alert(result.trim());
+			$('#anexosDiv').append(result.trim());
+		}
+	});
+	
+}
+
+function apagar_anexos(rececao, nome_ficheiro){
+
+	var r=confirm("Pretende mesmo remover o anexo \"" + nome_ficheiro + "\" ?");
+	if (r==true){
+		
+		var dataString = 'rececao=' + rececao + '&nome_ficheiro=' + nome_ficheiro + '&opcao=apagar_anexos';
+		//alert(dataString);
+		$.ajax({
+			type: "POST",
+			url: "assets/php/logistica_rececao_mercadorias.php",
+			data: dataString,
+			cache: false,
+			success: function(result)
+			{
+				//alert(result.trim());
+				$('#anexosDiv').html(result.trim());
+				$('#separadorFicheiros').html(result.trim());
+				new PNotify({
+                    title: 'Sucesso',
+                    text: 'Ficheiro eliminado com Sucesso',
+                    type: 'success'
+                });
+			}
+		});
+		
+	}
+
+}
+
+function editar_fornecedor(id, nome_sacha, nome_fornecedor){
+		
+	document.getElementById("edit_nome_sacha").value = '';
+	document.getElementById("edit_nome_fornecedor").value = '';
+
+	$('#titulo_expedicao_fornecedor').html('<i class="fa fa-pencil" aria-hidden="true"></i> Fornecedor - '+nome_fornecedor+' ('+nome_sacha+')');
+	$('#get_id_fornecedor').html(id+";"+nome_sacha+";"+nome_fornecedor);
+
+	// COLOCA OS VALORES DO RESPETIVO EXPEDIÇÃO NOS CAMPOS
+	document.getElementById("edit_nome_sacha").value = nome_sacha;
+	document.getElementById("edit_nome_fornecedor").value = nome_fornecedor;
+
+	document.getElementById("edit_fornecedor_modalLG").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+
+	document.getElementById("edit_nome_sacha").style.border = "1px solid #cccccc"; 
+	document.getElementById("edit_nome_fornecedor").style.border = "1px solid #cccccc"; 
+	
+}
+
+function apagar_fornecedor(id, nome_sacha, nome_fornecedor){
+	
+	$('#get_fornecedor').html(id);
+	
+	$('#texto_info_fornecedor').html("Pretende remover o <strong>Fornecedor "+nome_sacha+" ("+nome_sacha+")</strong>?");
+
+	document.getElementById("fornecedor_modalXS").style.display = "block"; // MOSTRA O FORMULÀRIO VISIVEL
+	
+}
+
+function ativar_fornecedor(fornecedor){
+	
+	if ($('#ativo_fornecedor'+fornecedor).prop('checked')) {
+		var id = $('#ativo_fornecedor'+fornecedor).data('id');
+		var ativo = 1;
+		
+		$('.ativo_fornecedor'+id).removeClass('checkbox-default');
+		$('.ativo_fornecedor'+id).addClass('checkbox-success');
+		//checked
+	} else {
+		var id = $('#ativo_fornecedor'+fornecedor).data('id');
+		var ativo = 0;
+		
+		$('.ativo_fornecedor'+id).removeClass('checkbox-success');
+		$('.ativo_fornecedor'+id).addClass('checkbox-default');
+		//not checked
+	}
+
+	var dataString = 'id=' + id + '&ativo=' + ativo + '&opcao=ativar_fornecedor';
+
+	$.ajax({
+		type: "POST",
+		url: "assets/php/logistica_rececao_mercadorias.php",
+		data: dataString,
+		cache: false,
+		success: function(result)
+		{
+			//alert(result);
+			var result = result.trim();
+			new PNotify({
+				title: 'Sucesso',
+				text: result,
+				type: 'success'
+			});
+		}
+	});
+	
+}
+
+function getCookie(cname) {
+    var name = cname + "=";
+    var ca = document.cookie.split(';');
+    for(var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
+//FUNÇÃO PARA INTRODUZIR SÓ NÚMEROS
+function validateNumber(event) {
+    var key = window.event ? event.keyCode : event.which;
+    if (event.keyCode === 8 || event.keyCode === 46 || event.keyCode === 9) {
+        return true;
+    } else if ( key < 48 || key > 57 ) {
+        return false;
+    } else {
+    	return true;
+    }
+}
